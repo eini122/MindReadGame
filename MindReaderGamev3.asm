@@ -12,13 +12,13 @@ introduction:
 thankYou:	.asciiz "Thank you!"
 newLine:	.asciiz "\n"
 space:		.asciiz " "
-yourNumber:	.asciiz "Do you see your number?\n"
+yourNumber:	.asciiz "Do you see your number?\n" #24 bcharacters, 6 sw commands
 
 
 displayList:   .space 64    	#store the display integer
 storeList:	.space 64	#store integers not used
 userList:	.space 64	#store the numbers based on user choose 
-pList:  .space 256	#space for 128 digits and formating ascii characters
+pList:  .space 280	#space for 128 digits and formating ascii characters and the 24 bytes from 
 
 	.text
 main:
@@ -26,6 +26,8 @@ main:
 	li	$v0, 50
 	la	$a0, introduction
 	syscall
+	
+	jal playSound
 	
 	beq $a0, 1, main	#user choose no, go back main
 	beq $a0, 2, Exit	#user choose cancel, exit the program
@@ -41,6 +43,9 @@ main:
 	addi $s0, $zero, 32	#tells the printList function to only print 32 numbers
 	la $a2, userList	#this is the list that will be printed
 	jal printList
+	
+	jal playSound
+	
 	j Exit
 	
 	#initilizes displayList with all possible numbers
@@ -87,12 +92,26 @@ loop2:	beq $t0, $t1, return	#exit condition for the loop, when $t0 == $t1, exit 
 	#POST-CONDITION:	pList will contain the ascii equivilent of the numbers stored at $a2
 	#			the contents of pList will be displayed
 printList:
+	addi $t0, $zero, 0	#counter for how many times the loop is executed
+	la $t5, pList		#stores address of pList into $t1
+	la $t2, yourNumber	#stores address of "Do you see your numer?\n"
+	addi $t3, $zero, 0 	#stores the letters from yourNumber to be put in pList
+	addi $t4, $zero, 24	#stores how many times the loop will be executed
+loadQuestion:		#this loop loads "do you see your number?\n" into pList before the numbers
+	lb $t3, ($t2)		#loads the letters into $t3
+	sb $t3, ($t5)		#stores the letters to pList
+	
+	addi $t0, $t0, 1	#increments the variables
+	addi $t5, $t5, 1
+	addi $t2, $t2, 1
+	bne $t0, $t4, loadQuestion
+	
 	addi $t0, $zero, 0	#counter for how many times the loop executed
 	addi $t1, $zero, 0	#stores the value at list[$t0]
 	move $t2, $a2		#address of the start for list
 	addi $t3, $zero, 0	#stores the lower didgit of $t1
 	addi $t4, $zero, 0	#stores the upper didgit of $t1
-	la $t5, pList		#address of the start of pList
+	#la $t5, pList		#address of the start of pList
 	addi $t6, $zero, 10	#stores the number 10 for divion later
 	addi $t7, $zero, 0x30	#stores a value for a comparison later
 	addi $t8, $zero, 0x20	#stores the value of the ' ' character
@@ -126,11 +145,29 @@ increment:
 	j loop3
 	
 display:
-	addi $v0, $zero, 59	#loads the code for "Message Dialog Screen" into $v0
-	la $a0, yourNumber	
-	la $a1, pList
+	addi $v0, $zero, 50	#loads the code for "Message Dialog Screen" into $v0
+	la $a0, pList
 	syscall
 	jr $ra
+	
+	#Pre-Condition: No nessecary pre-conditions must be met
+	#Post Condition:	Two notes will be played to the user
+playSound:
+	addi $v0, $zero, 31	#syscall function number
+	addi $a0, $zero, 67	#pitch
+	addi $a1, $zero, 250	#duration
+	addi $a2, $zero, 60	#instument
+	addi $a3, $zero, 50	#volume
+	syscall
+	
+	addi $v0, $zero, 31	#syscall function number
+	addi $a0, $zero, 66	#pitch
+	addi $a1, $zero, 500	#duration
+	addi $a2, $zero, 60	#instument
+	addi $a3, $zero, 50	#volume
+	syscall
+	
+	j return
 
 return:
 	jr $ra
@@ -140,6 +177,8 @@ Exit:
 	la 	$a0, thankYou
 	li	$a1, 1
 	syscall
+	
+	jal playSound
 	
 	li	$v0, 10
 	syscall
