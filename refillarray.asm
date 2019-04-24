@@ -1,7 +1,7 @@
 .data
 
 Loop2List:	.byte	33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64	#number of the second "not used list" to combine the user chosen list
-displayList:	.byte	99,99,3,4,5,6,7,8,9,99,11,12,13,14,99,16,99,18,19,20,99,22,23,24,25,99,27,28,29,30,31,32# list contain the number displayList
+displayList:	.byte	99,99,3,4,5,6,7,8,9,99,11,12,13,14,99,16,99,18,19,20,99,22,23,24,25,99,27,28,29,30,31,99# list contain the number displayList
 space:		.ascii	" "
 
 .text
@@ -49,7 +49,7 @@ reFill:
 	add 	$t1, $a0, $t0		#get address of array[i]
 	lb	$t2, ($t1)		#load array[i]
 	beq	$t2, 99, replace	#if array[i] = 99, replace the number
-	add	$t0, $t0, 1		#i++
+	addi	$t0, $t0, 1		#i++
 	j	reFill
 	
 replace:
