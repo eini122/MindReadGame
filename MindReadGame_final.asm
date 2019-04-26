@@ -14,126 +14,132 @@
   
 	.data
 introduction:
-	.ascii  "Welcome to the Mind Reader game, please think of a number between 1 and 64, "
-	.ascii	"\nand after 6 simple questions, the mind reader will know your number."
-	.ascii	"\nIf you find your number on the screen, click YES."
-	.ascii	"\nIf you cannot find the number, click NO."
-	.ascii	"\n"
-	.ascii  "\nYES - if you are ready to start"
-	.ascii  "\nNO - to see the rules again"
-	.asciiz "\nCancel - to exit the Game\n"
-again:	.ascii	"Do you want to play again?"
-	.ascii	"\nYes - Play again"
-	.asciiz	"\nNo - exit"
-answer:	.asciiz "Your number is: "
+	.ascii		"Welcome to the Mind Reader game, please think of a number between 1 and 64, "
+	.ascii		"\nand after 6 simple questions, the mind reader will know your number."
+	.ascii		"\nIf you find your number on the screen, click YES."
+	.ascii		"\nIf you cannot find the number, click NO."
+	.ascii		"\n"
+	.ascii 		"\nYES - if you are ready to start"
+	.ascii  	"\nNO - to see the rules again"
+	.asciiz 	"\nCancel - to exit the Game\n"
+again:	.ascii		"Do you want to play again?"
+	.ascii		"\nYes - Play again"
+	.asciiz		"\nNo - exit"
+answer:	.asciiz 	"Your number is: "
 thankYou:	.asciiz "Thank you!"
 newLine:	.asciiz "\n"
 space:		.asciiz " "
 yourNumber:	.asciiz "Do you see your number?\n" #24 characters
 
-list1:   .space 64    	#store the integer that will be displayed
-list2:	.space 32	#store the random generate integers
+list1:   .space 64    		#store the integer that will be displayed
+list2:	.space 32		#store the random generate integers
 displayList:	.space 32	#store the numbers based on user choose 
-pList:  .space 280	#space for 128 digits and formating ascii characters and the 24 bytes from "Do you see yourNumber\n"
+pList:  .space 280		#space for 128 digits and formating ascii characters and the 24 bytes from "Do you see yourNumber\n"
 
 	.text
 main:	
-	li	$s2, 0	#A global variable used in the "refill" subroutine to give the appearance of picking random numbers 
-			#to fill out the array display instroduction
+	li	$s2, 0		#A global variable used in the "refill" subroutine to give the appearance of picking random numbers 
+				#to fill out the array display instroduction
 	li	$v0, 50
 	la	$a0, introduction
 	syscall
 	
 	#check input
-	beq $a0, 1, main	#user choose no, go back main
-	beq $a0, 2, Exit	#user choose cancel, exit the program
+	beq	$a0, 1, main	#user choose no, go back main
+	beq	$a0, 2, Exit	#user choose cancel, exit the program
 	
-	jal playSound
+	jal 	playSound
 	
-	addi $s0, $zero, 64	#stores the max size of the array
-	jal initList	#set 1-64 into list1
+	addi 	$s0, $zero, 64	#stores the max size of the array
+	jal 	initList	#set 1-64 into list1
 	
-	addi $a1, $zero, 63	#the maximum number for generate - 1
-	la $a2, list1		#$a2 is the list that will have its values moved
-	la $a3, list2		#$a3 is the list that will have values moved into it
-	addi $a0, $zero, 32	#make sure randgen only run 32 times	
-	jal randGen
+	addi	$a1, $zero, 63	#the maximum number for generate -1
+	la	$a2, list1	#$a2 is the list that will have its values moved
+	la 	$a3, list2	#$a3 is the list that will have values moved into it
+	addi 	$a0, $zero, 32	#make sure randgen only run 32 times	
+	jal 	randGen
 	
-	la $a0, list1		#the list to be condensed
-	addi $a1, $zero, 64	#the size of the list to be condensed
-	jal condenseList
+	la 	$a0, list1	#the list to be condensed
+	addi 	$a1, $zero, 64	#the size of the list to be condensed
+	jal 	condenseList
 	
-	li $s0, 0	#counter for the loop of the whole game
-	li $s1, 16	#the amount of numbers to be transfered to the new list with each "randGen" call
-	li $s3, 32	#the amount of numbers to be transfered to the unused numbers list
+	li 	$s0, 0		#counter for the loop of the whole game
+	li 	$s1, 16		#the amount of numbers to be transfered to the new list with each "randGen" call
+	li 	$s3, 32		#the amount of numbers to be transfered to the unused numbers list
+	
 playGame:
-	la $a0, displayList	#get address of displayList
-	jal emptyList
+	la 	$a0, displayList#get address of displayList
+	jal 	emptyList
 	
-	la $a0, list1		#back to address of list1 for display later
-	la $a1, displayList
-	li $a2, 32 		#max times to loop
-	jal copyList
+	la 	$a0, list1	#back to address of list1 for display later
+	la 	$a1, displayList
+	li 	$a2, 32 	#max times to loop
+	jal 	copyList
 	
-	jal initilizeRefill
+	jal 	initilizeRefill
 	
-	la $a0, displayList
-	jal insertionSort
+	la	$a0, displayList
+	jal	insertionSort
 
-	beq, $s0, 6, finalAnswer#if loop=6, we display the user guess number
-	addi $a0, $zero, 32	#tells the printList function to only print 32 numbers
-	la $a2, displayList	#this is the list that will be printed
-	jal printList
+	beq	$s0, 6, finalAnswer#if loop = 6, we display the user guess number
+	addi	$a0, $zero, 32	#tells the printList function to only print 32 numbers
+	la	$a2, displayList#this is the list that will be printed
+	jal 	printList
 	
-	beq $a0, 2, Exit
-	beq $a0, 0, yes
+	beq 	$a0, 2, Exit
+	beq 	$a0, 0, yes
 	
-no:	la $a0, list1
-	addi $a1, $s3, 0
-	jal storeUnusedNumbers	#stores the unused numbers to memory to be used later for filling out the list of numbers
+no:	
+	la 	$a0, list1
+	addi 	$a1, $s3, 0
+	jal 	storeUnusedNumbers#stores the unused numbers to memory to be used later for filling out the list of numbers
 	
-	la $a0, list2	#list being copied from
-	la $a1, list1	#list being copied to
-	addi $a2,$s3,0	#number of elements to copy
-	jal copyList
+	la	$a0, list2	#list being copied from
+	la	$a1, list1	#list being copied to
+	addi	$a2,$s3,0	#number of elements to copy
+	jal	copyList
 	
-	la $a0, list2	#we moved list 2 to list 1 then emptied list 2
-	jal emptyList	#this means list 1 will always store the possible numbers
+	la	$a0, list2	#we moved list 2 to list 1 then emptied list 2
+	jal	emptyList	#this means list 1 will always store the possible numbers
 	
-	j result
+	j 	result
 	
-yes:	la $a0, list2
-	addi $a1, $s3, 0
-	jal storeUnusedNumbers	#stores the unused numbers to memory to be used later for filling out the list of numbers
+yes:	
+	la	$a0, list2
+	addi	$a1, $s3, 0
+	jal	storeUnusedNumbers#stores the unused numbers to memory to be used later for filling out the list of numbers
 	
-	la $a0, list2	
-	jal emptyList	#empties list2 as it doesn't contain the number that the user is thinking of
+	la	$a0, list2	
+	jal	emptyList	#empties list2 as it doesn't contain the number that the user is thinking of
 	
 result:
-	addi $a1, $zero, 31	#the maximum number for generate - 1
-	la $a2, list1		#$a2 is the list that will have its values moved
-	la $a3, list2		#$a3 is the list that will have values moved into it
-	addi $a0, $s1, 0	#how many elements to copy/move
-	jal randGen
+	addi	$a1, $zero, 31	#the maximum number for generate - 1
+	la	$a2, list1	#$a2 is the list that will have its values moved
+	la	$a3, list2	#$a3 is the list that will have values moved into it
+	addi	$a0, $s1, 0	#how many elements to copy/move
+	jal 	randGen
 	
-	la $a0, list1
-	jal insertionSort
+	la 	$a0, list1
+	jal	insertionSort
 	
-	addi $s0, $s0, 1	#increment counters
-	move $s3, $s1
-	srl $s1, $s1, 1		#shorten the ranGen number size
-	j playGame
+	addi	$s0, $s0, 1	#increment counters
+	move	$s3, $s1
+	srl	$s1, $s1, 1	#shorten the ranGen number size
+	j 	playGame
+	
 	#initilizes list1 with all possible numbers
 initList:
-    	addi $t0, $zero, 0    	#the counter for how many times to execute the loop
-    	addi $t1, $zero, 1    	#the number being added to the array
-    	la $t2, list1     #address of list start
-loop1:  beq $t0, $s0, return    #if the loop counter is at the max size of the array, end the subroutine
-    	sb $t1, ($t2)        	#list[$t0] = $t1
-    	addi $t0, $t0, 1    	#increment the variables
-    	addi $t1, $t1, 1
-    	addi $t2, $t2, 1
-    	j loop1
+    	addi	$t0, $zero, 0   #the counter for how many times to execute the loop
+    	addi	$t1, $zero, 1   #the number being added to the array
+    	la 	$t2, list1     	#address of list start
+    	
+loop1:  
+	beq 	$t0, $s0, return#if the loop counter is at the max size of the array, end the subroutine
+    	sb 	$t1, ($t2)  	#list[$t0] = $t1
+    	addi 	$t0, $t0, 1    	#increment the variables
+    	addi 	$t1, $t1, 1
+    	addi 	$t2, $t2, 1
+    	j 	loop1
     	
     	#generates a random number between 1 and $a1
     	#PRE-CONDITION: $a2 is the address of the original array, $a3 is the address of the new/changed array
@@ -141,49 +147,53 @@ loop1:  beq $t0, $s0, return    #if the loop counter is at the max size of the a
     	#		$a0 will contain the number of times to execute this loop
     	#POST-CONDITION:	the array at $a2 will have half of its values set to 99 to denote that they were used,
  	#			the array at $a3 will contain the values extracted from $a2
+ 	
 randGen:
-	addi $t0, $zero, 0	#$t0 is the counter for how many times the loop is run
-	add $t1, $zero, $a0	#$t1 is the exit condition for the loop, when $t0 == $t1, exit loop
-	move $t3, $a3		#moves the address for the new list into $t3
-loop2:	beq $t0, $t1, return	#exit condition for the loop, when $t0 == $t1, exit loop
-	addi $v0, $zero, 42	#loads the system function number for the random number generator into $v0
+	addi	$t0, $zero, 0	#$t0 is the counter for how many times the loop is run
+	add	$t1, $zero, $a0	#$t1 is the exit condition for the loop, when $t0 == $t1, exit loop
+	move	$t3, $a3	#moves the address for the new list into $t3
+	
+loop2:	
+	beq 	$t0, $t1, return#exit condition for the loop, when $t0 == $t1, exit loop
+	addi 	$v0, $zero, 42	#loads the system function number for the random number generator into $v0
 	syscall
 	
-	addi $a0, $a0, 1	#changes the range of the random number from 0-63 to 1-64
-	move $t2, $a2		#loads the address of the original array into $t2
-	add $t2, $t2, $a0	#offsets the address by the random number
-	lb $t4, ($t2)		#loads the number stored at the new address within the array
-	beq $t4, 99, loop2	#if the randomly selected number was already selected, try another random number
-	addi $a0, $zero, 99	#$a0 is not used for the rest of the loop so it is repourposed to temporarily store 99
-	sb $a0, ($t2)		#replaces the number extracted from the original array with 99 so we know its been used
-	sb $t4, ($t3)		#stores the extracted value into the new array
-	
-	addi $t3, $t3, 1	#increments the address of the new array
-	addi $t0, $t0, 1	#increments the counter for the loop
-	j loop2			#return to the head of the loop
+	addi 	$a0, $a0, 1	#changes the range of the random number from 0-63 to 1-64
+	move 	$t2, $a2	#loads the address of the original array into $t2
+	add 	$t2, $t2, $a0	#offsets the address by the random number
+	lb 	$t4, ($t2)	#loads the number stored at the new address within the array
+	beq 	$t4, 99, loop2	#if the randomly selected number was already selected, try another random number
+	addi 	$a0, $zero, 99	#$a0 is not used for the rest of the loop so it is repourposed to temporarily store 99
+	sb 	$a0, ($t2)	#replaces the number extracted from the original array with 99 so we know its been used
+	sb 	$t4, ($t3)	#stores the extracted value into the new array
+	addi	$t3, $t3, 1	#increments the address of the new array
+	addi	$t0, $t0, 1	#increments the counter for the loop
+	j 	loop2		#return to the head of the loop
 	
 	#Pre-Condition:		$a0 contains the adress of the list to be emptied
 	#Post-Condition:	the array at $a0 will be filled with 99's
-emptyList:
-	li $t0, 0	#the counter for the loop
-	li $t1, 99	#$t1 will be stored to every index of list $a0
-	addi $t2, $a0, 0	#the address of the array to be emptied
-emptyLoop:
-	beq $t0, 32, return	#when the loop has executed 32 times, return
-	sb $t1, ($t2)		#stores 99 into the current index
-	addi $t0, $t0, 1	#increment the variables
-	addi $t2, $t2, 1
-	j emptyLoop
 	
+emptyList:
+	li 	$t0, 0		#the counter for the loop
+	li	$t1, 99		#$t1 will be stored to every index of list $a0
+	addi 	$t2, $a0, 0	#the address of the array to be emptied
+	
+emptyLoop:
+	beq 	$t0, 32, return	#when the loop has executed 32 times, return
+	sb 	$t1, ($t2)	#stores 99 into the current index
+	addi 	$t0, $t0, 1	#increment the variables
+	addi 	$t2, $t2, 1
+	j 	emptyLoop
 	
 initilizeRefill:
-	li $t0, 0	#counter for loop
-	li $t1, 0	#number extracted from display list numbers
-	la $t2, list1	#address of unused numbers list
-	addi $t2, $t2, 32
-	li $t3, 0	#number extracted from unused nubers list
-	la $t4, displayList	#address of the display list
-	li $t5, 32	#constant 32 used for divions later
+	li 	$t0, 0		#counter for loop
+	li 	$t1, 0		#number extracted from display list numbers
+	la 	$t2, list1	#address of unused numbers list
+	addi	$t2, $t2, 32
+	li 	$t3, 0		#number extracted from unused nubers list
+	la 	$t4, displayList#address of the display list
+	li 	$t5, 32		#constant 32 used for divions later
+	
 refill:
 	beq	$t0, 32, return		#exit condition
 	lb	$t1, ($t4)		#load numbers in array
@@ -207,152 +217,162 @@ replace:
 	#			$a1 is the address of the list being copied to
 	#			$a2 is the number of elements to copy
 	#Post-Condition:	the list at $a1 will have $a2 numbers copied into it from $a0
-copyList:
-	li $t0, 0		#counter for the loop
-	addi $t1, $a2, 0	#exit condition for loop
-	addi $t2, $a0, 0	#address of list to copy from
-	li $t3, 0		#stores the element being copied
-	addi $t4, $a1,0		#address of the list being copied to
-copyLoop:
-	beq $t0, $t1, return	#when the counter is at the limit set by the user, exit the loop
-	lb $t3, ($t2)		#extract the number from the first list
-	sb $t3, ($t4)		#store the number into the second list
 	
-	addi $t0, $t0, 1	#increment the variables
-	addi $t2, $t2, 1	
-	addi $t4, $t4, 1
-	j copyLoop
+copyList:
+	li	$t0, 0		#counter for the loop
+	addi 	$t1, $a2, 0	#exit condition for loop
+	addi 	$t2, $a0, 0	#address of list to copy from
+	li 	$t3, 0		#stores the element being copied
+	addi 	$t4, $a1,0	#address of the list being copied to
+	
+copyLoop:
+	beq 	$t0, $t1, return#when the counter is at the limit set by the user, exit the loop
+	lb 	$t3, ($t2)	#extract the number from the first list
+	sb	$t3, ($t4)	#store the number into the second list
+	
+	addi 	$t0, $t0, 1	#increment the variables
+	addi 	$t2, $t2, 1	
+	addi 	$t4, $t4, 1
+	j 	copyLoop
 
 	#PRE-CONDITION:	$a2 will contain the address of the list to be printed
 	#		$s0 is the amount of numbers to be printed
 	#POST-CONDITION:	pList will contain the ascii equivilent of the numbers stored at $a2
 	#			the contents of pList will be displayed
+	
 printList:
-	addi $t0, $zero, 0	#counter for how many times the loop is executed
-	la $t5, pList		#stores address of pList into $t5
-	la $t2, yourNumber	#stores address of "Do you see your numer?\n"
-	addi $t3, $zero, 0 	#stores the letters from yourNumber to be put in pList
-	addi $t4, $zero, 24	#stores how many times the loop will be executed
-loadQuestion:		#this loop loads "do you see your number?\n" into pList before the numbers
-	lb $t3, ($t2)		#loads the letters into $t3
-	sb $t3, ($t5)		#stores the letters to pList
+	addi	$t0, $zero, 0	#counter for how many times the loop is executed
+	la	$t5, pList	#stores address of pList into $t5
+	la	$t2, yourNumber	#stores address of "Do you see your numer?\n"
+	addi	$t3, $zero, 0 	#stores the letters from yourNumber to be put in pList
+	addi	$t4, $zero, 24	#stores how many times the loop will be executed
 	
-	addi $t0, $t0, 1	#increments the variables
-	addi $t5, $t5, 1
-	addi $t2, $t2, 1
-	bne $t0, $t4, loadQuestion
+loadQuestion:			#this loop loads "do you see your number?\n" into pList before the numbers
+	lb	$t3, ($t2)	#loads the letters into $t3
+	sb 	$t3, ($t5)	#stores the letters to pList
 	
-	addi $t0, $zero, 0	#counter for how many times the loop executed
-	addi $t1, $zero, 0	#stores the value at list[$t0]
-	move $t2, $a2		#address of the start for list
-	addi $t3, $zero, 0	#stores the lower didgit of $t1
-	addi $t4, $zero, 0	#stores the upper didgit of $t1
-	addi $t6, $zero, 10	#stores the number 10 for divion later
-	addi $t7, $zero, 0x30	#stores a value for a comparison later
-	addi $t8, $zero, 0x20	#stores the value of the ' ' character
-	addi $t9, $zero, 3	#counter for when to add a "next line" character to the string
+	addi 	$t0, $t0, 1	#increments the variables
+	addi 	$t5, $t5, 1
+	addi 	$t2, $t2, 1
+	bne 	$t0, $t4, loadQuestion
 	
-loop3:	beq $t0, $a0, display	#ends the loop once $t0 is at the end of the array
-	lb $t1, ($t2)		#sets $t1 to the item at list[$t0]
-	div $t1, $t6		
-	mfhi $t3		#sets $t3 to the lower digit of $t1
-	mflo $t4		#sets $t4 to the upper digit of t1
+	addi 	$t0, $zero, 0	#counter for how many times the loop executed
+	addi 	$t1, $zero, 0	#stores the value at list[$t0]
+	move 	$t2, $a2	#address of the start for list
+	addi 	$t3, $zero, 0	#stores the lower didgit of $t1
+	addi 	$t4, $zero, 0	#stores the upper didgit of $t1
+	addi 	$t6, $zero, 10	#stores the number 10 for divion later
+	addi 	$t7, $zero, 0x30#stores a value for a comparison later
+	addi 	$t8, $zero, 0x20#stores the value of the ' ' character
+	addi 	$t9, $zero, 3	#counter for when to add a "next line" character to the string
 	
-	addi $t3, $t3, 0x30	#converts the integers to their ascii equivilent
-	addi $t4, $t4, 0x30	
+loop3:	
+	beq	$t0, $a0, display#ends the loop once $t0 is at the end of the array
+	lb	$t1, ($t2)	#sets $t1 to the item at list[$t0]
+	div	$t1, $t6		
+	mfhi 	$t3		#sets $t3 to the lower digit of $t1
+	mflo 	$t4		#sets $t4 to the upper digit of t1
 	
-	bne $t4, $t7, nxtLn	#if the upper digit is 0, change it to a ' ' character
-	addi $t4, $zero, 0x20	
+	addi 	$t3, $t3, 0x30	#converts the integers to their ascii equivilent
+	addi 	$t4, $t4, 0x30	
 	
-nxtLn:	sb $t4, ($t5)		#stores the upper digit or a ' ' into pList
-	sb $t3, 1($t5)		#stores the lower digit into pList
-	sb $t8, 2($t5)		#stores a ' ' character after the numbers
+	bne 	$t4, $t7, nxtLn	#if the upper digit is 0, change it to a ' ' character
+	addi 	$t4, $zero, 0x20	
 	
-	bne $t9, $t6, increment	#after 8 integers are printed, add a "new line" character
-	sb $t9, 3($t5)		#stores the "new line" character
-	addi $t5, $t5, 1	#increments the pList pointer
-	addi $t9, $zero, 2	#resets the counter for when to add a "new line" character
+nxtLn:	sb 	$t4, ($t5)	#stores the upper digit or a ' ' into pList
+	sb 	$t3, 1($t5)	#stores the lower digit into pList
+	sb 	$t8, 2($t5)	#stores a ' ' character after the numbers
+	
+	bne 	$t9, $t6, increment#after 8 integers are printed, add a "new line" character
+	sb 	$t9, 3($t5)	#stores the "new line" character
+	addi 	$t5, $t5, 1	#increments the pList pointer
+	addi 	$t9, $zero, 2	#resets the counter for when to add a "new line" character
+
 increment:
-	addi $t0, $t0, 1	#increments all of the counters used
-	addi $t2, $t2, 1
-	addi $t5, $t5, 3
-	addi $t9, $t9, 1
-	j loop3
+	addi 	$t0, $t0, 1	#increments all of the counters used
+	addi 	$t2, $t2, 1
+	addi 	$t5, $t5, 3
+	addi 	$t9, $t9, 1
+	j 	loop3
 	
 display:
-	li $t1, 0x00
-	sb $t1, ($t5)	#stores a null byte into the end of the string
+	li 	$t1, 0x00
+	sb 	$t1, ($t5)	#stores a null byte into the end of the string
 	
-	addi $v0, $zero, 50	#loads the code for "Message Dialog Screen" into $v0
-	la $a0, pList
+	addi 	$v0, $zero, 50	#loads the code for "Message Dialog Screen" into $v0
+	la 	$a0, pList
 	syscall
-	jr $ra
+	jr 	$ra
 	
 	#Pre-Condition:		$a0 will have the address of the list to be sorted
 	#			$a1 will have the size of the list
-	#Post-Condition:	The list given to the function will have all of its numbers next to eachother with no 0xff number in between
+	#Post-Condition:	The list given to the function will have all of its numbers next to each other 
+	#			with no 0xff number in between
 condenseList:
-	li $t0, 0		#$t0 is the counter for the loop
-	addi $t1, $a1, 0	#$t1 contains the size of the list
-	addi $t2, $a0, 0	#$t2 contains the address of the list
-	addi $t3, $zero, 0	#$t3 will store the number taken from the list for comparison
-	addi $t4, $a1, 0	#$t4 is an iterator for the list
-	addi $t5, $zero, 99	#t5, contains 99 for comparison and storage later
-	add $t6, $a0, $a1	#stores the end of the list for comparison later
+	li 	$t0, 0		#$t0 is the counter for the loop
+	addi 	$t1, $a1, 0	#$t1 contains the size of the list
+	addi 	$t2, $a0, 0	#$t2 contains the address of the list
+	addi 	$t3, $zero, 0	#$t3 will store the number taken from the list for comparison
+	addi 	$t4, $a1, 0	#$t4 is an iterator for the list
+	addi 	$t5, $zero, 99	#t5, contains 99 for comparison and storage later
+	add 	$t6, $a0, $a1	#stores the end of the list for comparison later
 	
-loop4:	lb $t3, ($t2)		#load
-	bne $t3, $t5, increment2#if index=99, go to next index
-	addi $t4, $t2, 1	#sets $t4 to the address of the next element of $t2
+loop4:	
+	lb 	$t3, ($t2)	#load
+	bne 	$t3, $t5, increment2#if index=99, go to next index
+	addi 	$t4, $t2, 1	#sets $t4 to the address of the next element of $t2
+	
 findNumber:
-	beq $t4, $t6, return	#when the array reaches the user defined end of the array, return to the main code
-	lb $t3, ($t4)		#stores the current element of $t4 to $t3
-	addi $t4, $t4, 1	#increments the array iterator, $t4
-	beq $t3, 99, findNumber#if the element at $t4 is also already used, go through the loop again
-	sb $t3, ($t2)		#stores the unused number at $t3 into the currently already used number at the address of $t2
-	sb $t5, -1($t4)		#changes the former address of $t3 to 99 so we know its been used/moved
+	beq 	$t4, $t6, return#when the array reaches the user defined end of the array, return to the main code
+	lb 	$t3, ($t4)	#stores the current element of $t4 to $t3
+	addi 	$t4, $t4, 1	#increments the array iterator, $t4
+	beq 	$t3, 99, findNumber#if the element at $t4 is also already used, go through the loop again
+	sb 	$t3, ($t2)	#stores the unused number at $t3 into the currently already used number at the address of $t2
+	sb 	$t5, -1($t4)	#changes the former address of $t3 to 99 so we know its been used/moved
+
 increment2:
-	addi $t0, $t0, 1	#increment all variables
-	addi $t2, $t2, 1
-	bne $t0, $t1, loop4	#if the array isn't at its end yet, run the loop again
-	j return
+	addi 	$t0, $t0, 1	#increment all variables
+	addi 	$t2, $t2, 1
+	bne 	$t0, $t1, loop4	#if the array isn't at its end yet, run the loop again
+	j 	return
 	
 	#Pre-Condition:		$a0 will contain the address of the list to store
 	#			$a1 will contain the size of the list to store
 	#Post-Condition:	the "storeList" array will contain the elements of the array at $a0
 storeUnusedNumbers:
-	li $t0, 0		#$t0 is the counter for the loop
-	addi $t1, $a1, 0	#$t1 is the exit condition for the loop
-	addi $t2, $a0, 0	#$t2 contains the address of the array to be copied
-	la $t3, list1
-	addi $t3, $t3, 32	#$t3 contains the address of "storeList"
-	addi $t4, $zero, 0	#$t4 will store the element being transfered to "storeList"
+	li 	$t0, 0		#$t0 is the counter for the loop
+	addi 	$t1, $a1, 0	#$t1 is the exit condition for the loop
+	addi 	$t2, $a0, 0	#$t2 contains the address of the array to be copied
+	la 	$t3, list1
+	addi 	$t3, $t3, 32	#$t3 contains the address of "storeList"
+	addi 	$t4, $zero, 0	#$t4 will store the element being transfered to "storeList"
 loop5:
-	beq $t0, $t1, return	#exit condition
-	lb $t4, ($t2)		#copy the list from the valid number in list1
-	sb $t4, ($t3)		#store the copied list in storeList
-	addi $t0, $t0, 1	#increment variables
-	addi $t2, $t2, 1
-	addi $t3, $t3, 1
-	j loop5
-	
+	beq 	$t0, $t1, return#exit condition
+	lb 	$t4, ($t2)	#copy the list from the valid number in list1
+	sb 	$t4, ($t3)	#store the copied list in storeList
+	addi 	$t0, $t0, 1	#increment variables
+	addi 	$t2, $t2, 1
+	addi 	$t3, $t3, 1
+	j 	loop5
 	
 	#Pre-Condition: 	No nessecary pre-conditions must be met
 	#Post Condition:	Two notes will be played to the user
+
 playSound:
-	addi $v0, $zero, 31	#syscall function number
-	addi $a0, $zero, 67	#pitch
-	addi $a1, $zero, 250	#duration
-	addi $a2, $zero, 60	#instument
-	addi $a3, $zero, 50	#volume
+	addi 	$v0, $zero, 31	#syscall function number
+	addi 	$a0, $zero, 67	#pitch
+	addi 	$a1, $zero, 250	#duration
+	addi 	$a2, $zero, 60	#instument
+	addi 	$a3, $zero, 50	#volume
 	syscall
 	
-	addi $a0, $zero, 66	#pitch
-	addi $a1, $zero, 500	#duration
-	addi $a2, $zero, 60	#instument
-	addi $a3, $zero, 50	#volume
+	addi 	$a0, $zero, 66	#pitch
+	addi 	$a1, $zero, 500	#duration
+	addi 	$a2, $zero, 60	#instument
+	addi 	$a3, $zero, 50	#volume
 	syscall
 	
-	j return
+	j 	return
 	
 #	$t0: i
 #	$t1: j
@@ -362,63 +382,67 @@ playSound:
 #	$t5: array[j+1]
 #	$a0: adderss of array
 insertionSort:
-	li $t0, 1 #set counter start from 1 to locate the 2nd number in array to compare
-	j endLoop1
+	li	$t0, 1 		#set counter i=1 
+	j 	endLoop1
+
 forLoop1:
-	add $t9, $a0, $t0 #locate the starting sorting number
-	lb $t3, ($t9) #$t3 load the index from array in order to compare
-	addi $t1, $t0, -1 #move pointer to the 1st number in array
-	j next1
+	add 	$t9, $a0, $t0	#get the address of array[i]
+	lb	$t3, ($t9) 	#set temp = array[i]
+	addi 	$t1, $t0, -1 	#let j=i-1
+	j 	next1
+	
 	forLoop2:
-		add $t9, $a0, $t1 
-		lb $t4, ($t9) #array[j]
-		addi $t2, $t1, 1 # locate next 2nd number to compare
-		add $t9, $a0, $t2
-		sb $t4, ($t9) #store array[j] to array[j+1]
-		addi $t1, $t1, -1 #pointer move backward
+		add	$t9, $a0, $t1	#get address of array[j]
+		lb	$t4, ($t9)	#array[j]
+		addi 	$t2, $t1, 1	#locate next 2nd number to compare
+		add 	$t9, $a0, $t2	#array[j+1]
+		sb 	$t4, ($t9) 	#store array[j] to array[j+1]
+		addi	$t1, $t1, -1	#pointer move backward
 		
 	next1:
-		blt $t1, $zero, endLoop2 #if j = 0, end loop2
-		add $t9, $a0, $t1 #locate the number in array being compare
-		lb $t4, ($t9) #Array[j]
-		bgt $t4, $t3, forLoop2 #if temp < array[j] , startloop 2
+		blt 	$t1, $zero, endLoop2 	#if j = 0, end loop2
+		add 	$t9, $a0, $t1 		#locate the number in array being compare
+		lb 	$t4, ($t9) 		#Array[j]
+		bgt 	$t4, $t3, forLoop2 	#if temp < array[j] , startloop 2
 		
 	endLoop2:
-		addi $t5, $t1, 1 #increment counter
-		add $t9, $a0, $t5 #locate next number
-		sb $t3, ($t9) #insert the numbers
-		addi $t0, $t0, 1 #increment counter
+		addi $t5, $t1, 1 	#increment counter
+		add $t9, $a0, $t5 	#locate next number
+		sb $t3, ($t9) 		#insert temp into the end index
+		addi $t0, $t0, 1 	#increment counter
+		
 endLoop1:
-	blt $t0, 32, forLoop1 #exit condition
-	jr $ra
+	blt 	$t0, 32, forLoop1	#exit condition
+	jr 	$ra
 
 return:
-	jr $ra
+	jr 	$ra
 	
 	
 #display finalAnswer
 finalAnswer:
 
-	jal playSound
-	lb $t2, list1
-	li $v0, 56
-	la $a0, answer
-	move $a1, $t2
+	jal	playSound	#play sound
+	lb 	$t2, list1	#get the index 1 of the list 1
+	li 	$v0, 56		#use diagram to display the final list
+	la 	$a0, answer	#load string of the answer
+	move	$a1, $t2	#display the final number
 	syscall
 	
-	li $v0, 50
-	la $a0, again
+	li 	$v0, 50		#display the diagram to ask user to paly again or exit
+	la 	$a0, again
 	syscall
 	
-	beq $a0, 0, main
+	beq 	$a0, 0, main	#jump back to start	
 
+	#display thank you screen adn end program
 Exit:
 	li	$v0, 55
 	la 	$a0, thankYou
 	li	$a1, 1
 	syscall
 	
-	jal playSound
+	jal 	playSound
 	
 	li	$v0, 10
 	syscall
